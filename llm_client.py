@@ -7,10 +7,11 @@ and Pydantic validation failures.
 """
 
 import asyncio
+import copy
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from groq import APIError, AsyncGroq, RateLimitError
 from pydantic import ValidationError
@@ -228,3 +229,42 @@ async def generate_api_payload(
             raise LLMClientError(f"Unexpected error in generate_api_payload: {str(exc)}") from exc
 
     raise LLMClientError(f"Exhausted all retries without generating valid payload. Last error: {last_error}")
+
+
+async def correct_payload(
+    state: Union[Dict[str, Any], Any],
+    client: Optional[AsyncGroq] = None,
+    model: Optional[str] = None,
+    **kwargs: Any,
+) -> Dict[str, Any]:
+    """Mock implementation for correcting an API payload using LLM feedback.
+
+    In Phase 3, this function will construct a corrective prompt incorporating
+    the OpenAPI endpoint schema, the failing current_payload, and the
+    last_error_message returned by the API server to generate a corrected APIPayload.
+
+    Args:
+        state: Current LangGraph AgentState containing last_error_message,
+               current_payload, and endpoint_context.
+        client: Optional AsyncGroq client instance.
+        model: Optional model identifier.
+        **kwargs: Additional optional parameters for forward compatibility.
+
+    Returns:
+        Dict[str, Any]: Corrected payload dictionary conforming to APIPayload schema.
+    """
+    logger.info("Mock llm_client.correct_payload called.")
+
+    if isinstance(state, dict):
+        raw_payload = state.get("current_payload", {})
+    else:
+        raw_payload = getattr(state, "current_payload", {})
+
+    if hasattr(raw_payload, "model_dump"):
+        payload_dict = raw_payload.model_dump()
+    elif isinstance(raw_payload, dict):
+        payload_dict = copy.deepcopy(raw_payload)
+    else:
+        payload_dict = {}
+
+    return payload_dict

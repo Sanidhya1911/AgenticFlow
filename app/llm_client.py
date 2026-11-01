@@ -2,6 +2,7 @@
 
 from llm_client import (
     generate_api_payload,
+    correct_payload,
     get_api_payload_tool_definition,
     build_system_prompt,
     build_user_prompt,
@@ -13,6 +14,7 @@ from llm_client import (
 
 __all__ = [
     "generate_api_payload",
+    "correct_payload",
     "get_api_payload_tool_definition",
     "build_system_prompt",
     "build_user_prompt",
